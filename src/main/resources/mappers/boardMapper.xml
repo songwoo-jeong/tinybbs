@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardMapper">
+
+  <!-- 게시판 글 작성 -->
+  
+  <insert id="insert">
+	   INSERT INTO BOARDINFO(BOARDNUM 
+	   					      ,BOARDTITLE 
+	   					      ,BOARDTEXT
+	   					      ,BOARDWRITER)
+	                  VALUES(BOARDINFO_SEQ.NEXTVAL 
+	                 		  ,#{BoardTitle, jdbcType=VARCHAR}
+	                 		  ,#{BoardText}
+	                 		  ,#{BoardWriter, jdbcType=VARCHAR}  )
+   </insert>
+   
+   <!-- DB 안 저장된 게시글들 리스트로 조회 -->
+   
+   <select id="listPage" resultType="com.sw.vo.BoardVO" parameterType="com.sw.vo.Criteria">
+		SELECT  BOARDNUM, 
+		        BOARDTITLE, 
+		        BOARDTEXT,
+		        BOARDWRITER, 
+		        BOARDREGDATE
+		 FROM ( 
+		        SELECT BOARDNUM, 
+		               BOARDTITLE, 
+		               BOARDTEXT, 
+		               BOARDWRITER, 
+		               BOARDREGDATE, 
+		               ROW_NUMBER() OVER(ORDER BY BOARDNUM DESC) AS RNUM
+		         FROM BOARDINFO 
+		                       ) 
+		WHERE RNUM BETWEEN #{rowStart, jdbcType=VARCHAR} AND #{rowEnd, jdbcType=VARCHAR}
+		ORDER BY BOARDNUM DESC
+	</select>
+   
+   <!-- 게시글 총 갯수 조회 -->
+   
+   <select id="listCount" resultType="int">
+		SELECT COUNT(BOARDNUM)
+		  FROM BOARDINFO
+		 WHERE <![CDATA[ BOARDNUM > 0]]>
+	</select>
+   
+   <!-- 게시글 상세조회 -->
+   
+   <select id="read" parameterType="int" resultType="com.sw.vo.BoardVO">
+		SELECT	BOARDNUM
+			  , BOARDTITLE
+			  , BOARDTEXT
+			  , BOARDWRITER
+			  , BOARDREGDATE
+		 FROM BOARDINFO
+		 WHERE BOARDNUM = #{BoardNum}
+	</select>
+	
+	<!-- 게시글 수정 -->
+	
+	<update id="update" parameterType="com.sw.vo.BoardVO">
+		UPDATE BOARDINFO
+		   SET BOARDTITLE = #{BoardTitle},
+		   	   BOARDTEXT = #{BoardText}
+		 WHERE BOARDNUM = #{BoardNum} 
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	
+	<delete id="delete" parameterType="int">
+		DELETE 
+		  FROM BOARDINFO
+		 WHERE BOARDNUM = #{BoardNum}
+	</delete>
+	
+</mapper>
